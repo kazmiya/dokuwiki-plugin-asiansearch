@@ -1,36 +1,37 @@
 <?php
 /**
- * DokuWiki Plugin Asian Search
+ * AsianSearch Plugin for DokuWiki / action.php
  *
- * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * @author     Kazutaka Miyasaka <kazmiya@gmail.com>
+ * @license GPL 2 (http://www.gnu.org/licenses/gpl.html)
+ * @author  Kazutaka Miyasaka <kazmiya@gmail.com>
  */
 
 // must be run within DokuWiki
-if (!defined('DOKU_INC')) die();
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC.'lib/plugins/');
+if (!defined('DOKU_INC')) {
+    die();
+}
 
-require_once(DOKU_PLUGIN.'action.php');
+if (!defined('DOKU_PLUGIN')) {
+    define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
+}
 
-class action_plugin_asiansearch extends DokuWiki_Action_Plugin {
+require_once(DOKU_PLUGIN . 'action.php');
+
+class action_plugin_asiansearch extends DokuWiki_Action_Plugin
+{
     /**
-     * return some info
+     * Returns some info
      */
-    function getInfo() {
-        return array(
-            'author' => 'Kazutaka Miyasaka',
-            'email'  => 'kazmiya@gmail.com',
-            'date'   => '2010-12-07',
-            'name'   => 'Asian Search Plugin',
-            'desc'   => 'Provides a better search experience in Asian languages',
-            'url'    => 'http://www.dokuwiki.org/plugin:asiansearch'
-        );
+    function getInfo()
+    {
+        return confToHash(DOKU_PLUGIN . 'asiansearch/plugin.info.txt');
     }
 
     /**
-     * register the event handlers
+     * Registers event handlers
      */
-    function register(&$controller) {
+    function register(&$controller)
+    {
         if (!function_exists('datetime_h')) {
             // DokuWiki 2009-02-14 or earlier
             $controller->register_hook(
@@ -49,22 +50,30 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * handle a search query
+     * Handles a search query
      */
-    function handleQuery(&$event, $param) {
+    function handleQuery(&$event, $param)
+    {
         $data =& $event->data;
 
         // manipulate a query
-        $terms = preg_split('/(".*?")/u', $data['query'], -1, PREG_SPLIT_DELIM_CAPTURE);
-        $data['query'] = implode('', array_map(array($this, '_manipulateTerm'), $terms));
+        $terms = preg_split(
+            '/(".*?")/u', $data['query'], -1, PREG_SPLIT_DELIM_CAPTURE
+        );
+
+        $data['query'] = implode(
+            '',
+            array_map(array($this, 'manipulateTerm'), $terms)
+        );
     }
 
     /**
-     * manipulate a search term
+     * Manipulates a search term
      */
-    function _manipulateTerm($str = '') {
+    function manipulateTerm($str = '')
+    {
         // do nothing with a "pharse"
-        if (! preg_match('/^".*"$/u', $str)) {
+        if (!preg_match('/^".*"$/u', $str)) {
             // fix incomplete phrase
             $str = str_replace('"', ' ', $str);
 
@@ -72,27 +81,34 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin {
             $str = preg_replace('/\x{3000}/u', ' ',  $str);
 
             // make phrases for asian characters
-            $str = implode(' ', array_map(array($this, '_makePhrase'), explode(' ', $str)));
+            $str = implode(
+                ' ',
+                array_map(array($this, 'makePhrase'), explode(' ', $str))
+            );
         }
+
         return $str;
     }
 
     /**
-     * make a "phrase" for each successive asian character
+     * Makes a "phrase" for each successive asian character
      */
-    function _makePhrase($str = '') {
+    function makePhrase($str = '')
+    {
         // skip if $str has a search modifier
-        if (! preg_match('/^[\-\@\^]/u', $str)) {
-            $str = preg_replace('/('.IDX_ASIAN.'+)/u', ' "$1" ', $str);
+        if (!preg_match('/^[\-\@\^]/u', $str)) {
+            $str = preg_replace('/(' . IDX_ASIAN . '+)/u', ' "$1" ', $str);
             $str = trim($str);
         }
+
         return $str;
     }
 
     /**
      * Reactivates missing asian search snippets
      */
-    function reactivateAsianSearchSnippet(&$event, $param) {
+    function reactivateAsianSearchSnippet(&$event, $param)
+    {
         $event->preventDefault();
         $this->revised_ft_snippet($event);
     }
@@ -101,11 +117,13 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin {
      * Revised version of the ft_snippet()
      * (ft_snippet_re_preprocess is replaced)
      */
-    function revised_ft_snippet(&$event) {
+    function revised_ft_snippet(&$event)
+    {
         $id = $event->data['id'];
         $text = $event->data['text'];
         $highlight = $event->data['highlight'];
-        $snippet = '';
+
+        // ---> Copied from ft_snippet() - No code cleanings
 
         $match = array();
         $snippets = array();
@@ -179,6 +197,8 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin {
         $m = "\1";
         $snippets = preg_replace('/'.$re1.'/iu',$m.'$1'.$m,$snippets);
         $snippet = preg_replace('/'.$m.'([^'.$m.']*?)'.$m.'/iu','<strong class="search_hit">$1</strong>',hsc(join('... ',$snippets)));
+
+        // <--- Copied from ft_snippet() - No code cleanings
 
         $event->data['snippet'] = $snippet;
     }

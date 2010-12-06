@@ -1,10 +1,17 @@
+================================
 Asian Search Plugin for DokuWiki
+================================
 
-All documentation for the Asian Search Plugin is available online at:
+Provides a better search experience in Asian languages.
 
-  * http://www.dokuwiki.org/plugin:asiansearch
+Documentation
+  http://www.dokuwiki.org/plugin:asiansearch
 
-This plugin is tested with DokuWiki 2009-02-14 and later.
+Download URL for the Plugin Manager
+  http://github.com/kazmiya/dokuwiki-plugin-asiansearch/zipball/master
 
-(c) 2009 by Kazutaka Miyasaka <kazmiya@gmail.com>
+Compatible with DokuWiki 2009-02-14 and later.
+
 See COPYING for license info.
+
+Copyright (c) 2009, 2010 Kazutaka Miyasaka <kazmiya@gmail.com>
