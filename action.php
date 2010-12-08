@@ -15,7 +15,7 @@ if (!defined('DOKU_PLUGIN')) {
     define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
 }
 
-require_once(DOKU_PLUGIN . 'action.php');
+require_once DOKU_PLUGIN . 'action.php';
 
 class action_plugin_asiansearch extends DokuWiki_Action_Plugin
 {
@@ -45,6 +45,11 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin
             $controller->register_hook(
                 'FULLTEXT_SNIPPET_CREATE', 'BEFORE',
                 $this, 'reactivateAsianSearchSnippet'
+            );
+
+            $controller->register_hook(
+                'TPL_ACT_RENDER', 'BEFORE',
+                $this, 'reactivateAsianTermHighlight'
             );
         }
     }
@@ -123,7 +128,7 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin
         $text = $event->data['text'];
         $highlight = $event->data['highlight'];
 
-        // ---> Copied from ft_snippet() - No code cleanings
+        // ---> Copied from ft_snippet() - No code cleanups
 
         $match = array();
         $snippets = array();
@@ -131,9 +136,10 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin
         $len = utf8_strlen($text);
 
         // build a regexp from the phrases to highlight
-        $re1 = '('.join('|',
-            array_map(array($this, 'revised_ft_snippet_re_preprocess'), // <= REPLACED
-            array_map('preg_quote_cb',array_filter((array) $highlight)))).')';
+        $re1 = '('.join('|',array_map(
+            array($this, 'revised_ft_snippet_re_preprocess'), // <= REPLACED
+            array_map('preg_quote_cb',array_filter((array) $highlight))
+        )).')';
         $re2 = "$re1.{0,75}(?!\\1)$re1";
         $re3 = "$re1.{0,45}(?!\\1)$re1.{0,45}(?!\\1)(?!\\2)$re1";
 
@@ -198,7 +204,7 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin
         $snippets = preg_replace('/'.$re1.'/iu',$m.'$1'.$m,$snippets);
         $snippet = preg_replace('/'.$m.'([^'.$m.']*?)'.$m.'/iu','<strong class="search_hit">$1</strong>',hsc(join('... ',$snippets)));
 
-        // <--- Copied from ft_snippet() - No code cleanings
+        // <--- Copied from ft_snippet() - No code cleanups
 
         $event->data['snippet'] = $snippet;
     }
@@ -213,5 +219,77 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin
         } else {
             return ft_snippet_re_preprocess($term);
         }
+    }
+
+    /**
+     * Reactivates missing asian term highlightings
+     */
+    function reactivateAsianTermHighlight(&$event, $param)
+    {
+        if ($event->data === 'show') {
+            $event->preventDefault();
+            $this->revised_html_show();
+        }
+    }
+
+    /**
+     * Revised version of the html_show()
+     */
+    function revised_html_show($txt = null)
+    {
+        // ---> Copied from html_show() - No code cleanups
+
+        global $ID;
+        global $REV;
+        global $HIGH;
+        global $INFO;
+        //disable section editing for old revisions or in preview
+        if($txt || $REV){
+            $secedit = false;
+        }else{
+            $secedit = true;
+        }
+
+        if (!is_null($txt)){
+            //PreviewHeader
+            echo '<br id="scroll__here" />';
+            echo p_locale_xhtml('preview');
+            echo '<div class="preview">';
+            $html = html_secedit(p_render('xhtml',p_get_instructions($txt),$info),$secedit);
+            if($INFO['prependTOC']) $html = tpl_toc(true).$html;
+            echo $html;
+            echo '<div class="clearer"></div>';
+            echo '</div>';
+
+        }else{
+            if ($REV) print p_locale_xhtml('showrev');
+            $html = p_wiki_xhtml($ID,$REV,true);
+            $html = html_secedit($html,$secedit);
+            if($INFO['prependTOC']) $html = tpl_toc(true).$html;
+            $html = $this->revised_html_hilight($html,$HIGH); // <= REPLACED
+            echo $html;
+        }
+
+        // <--- Copied from html_show() - No code cleanups
+    }
+
+    /**
+     * Revised version of the html_hilight()
+     */
+    function revised_html_hilight($html, $phrases)
+    {
+        // ---> Copied from html_hilight() - No code cleanups
+
+        $phrases = array_filter((array) $phrases);
+        $regex = join('|',array_map(
+            array($this, 'revised_ft_snippet_re_preprocess'), // <= REPLACED
+            array_map('preg_quote_cb',$phrases)
+        ));
+
+        if ($regex === '') return $html;
+        $html = preg_replace_callback("/((<[^>]*)|$regex)/ui",'html_hilight_callback',$html);
+        return $html;
+
+        // <--- Copied from html_hilight() - No code cleanups
     }
 }

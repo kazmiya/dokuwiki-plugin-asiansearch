@@ -1,7 +1,7 @@
 base   asiansearch
 author Kazutaka Miyasaka
 email  kazmiya@gmail.com
-date   2010-12-07
+date   2010-12-08
 name   AsianSearch Plugin
 desc   Provides a better search experience in Asian languages
 url    http://www.dokuwiki.org/plugin:asiansearch
