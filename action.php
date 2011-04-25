@@ -40,8 +40,8 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin
             );
         } elseif (!function_exists('valid_input_set')) {
             // DokuWiki 2009-12-25 "Lemming" (do nothing)
-        } else {
-            // DokuWiki 2010-11-07 "Anteater" or later
+        } elseif (!function_exists('act_sitemap')) {
+            // DokuWiki 2010-11-07 "Anteater"
             $controller->register_hook(
                 'FULLTEXT_SNIPPET_CREATE', 'BEFORE',
                 $this, 'reactivateAsianSearchSnippet'
@@ -51,6 +51,8 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin
                 'TPL_ACT_RENDER', 'BEFORE',
                 $this, 'reactivateAsianTermHighlight'
             );
+        } else {
+            // DokuWiki Rincewind (do nothing)
         }
     }
 
