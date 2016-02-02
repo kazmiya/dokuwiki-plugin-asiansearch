@@ -30,7 +30,7 @@ class action_plugin_asiansearch extends DokuWiki_Action_Plugin
     /**
      * Registers event handlers
      */
-    function register(&$controller)
+    function register(Doku_Event_Handler $controller)
     {
         if (!function_exists('datetime_h')) {
             // DokuWiki 2009-02-14 or earlier
